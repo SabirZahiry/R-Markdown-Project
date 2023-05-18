@@ -1,0 +1,318 @@
+---
+title: "Final Project"
+author: "Sabir Zahiry , Yacob Shogar"
+date: '2022-06-04'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Global Music 
+## **INTRODUCTION**
+
+In today's society, music is the language of communication, and most musicians compose music to convey a specific message to politicians and public figures.
+
+It's fascinating to listen to music that everyone else is listening to based on your playlist, and the Spotify API we acquired from canvas contains a wealth of information that allows us to determine the popularity of the song.
+
+The goal of this project is to analyze and visualize data from the GlobalMusicData database. The data set includes detailed information about the performers, as well as their tracks, genres, and playlists. Since 1993, the GlobalMusicData data set has contained information on track names, albums, playlists, genres, and much more for various artists. 
+
+
+Through the processes below, we utilized R to perform data analysis and visualization to investigate and detect trends in the artists' recordings, as well as uncover insights to understand through the following steps:
+
+* Load Required Packages
+* Clean Up and Prepare Data for Analysis
+* Perform Exploratory Data Analysis
+* Data Visualization
+* Summary 
+* Interesting Insights of the the Analysis
+* Limitations 
+
+![](GP.png){Width=20%}
+
+## **More Data**
+
+For more information about http Spotify click here:[API](https://developer.spotify.com/documentation/web-api/reference/#/)
+
+## **Packages Required**
+
+
+```{r,echo=TRUE, warning=FALSE, message=FALSE}
+library(readr)  #will be used to read csv file
+library(plotly) # will be used to make interactive, publication-quality graphs.
+library(tidyr) # will be used to tidy up data
+library(GGally) #extension of ggplot2 with functions
+library(prettydoc) # used to document themes for R Markdown
+library(DT) # used for displaying R data objects (matrices or data frames) as tables on HTML pages
+library(lubridate) # used for date/time functions
+library(magrittr) # used for piping
+library(ggplot2) # used for data visualization
+library(dplyr) # used for data manipulation
+```
+
+## **Data Preparation**
+
+The code used to assess the variables in the raw data is as follows. We discovered that the data set has 32,833 observations and 33 variables, which are given below.
+
+```{r pressure, echo=TRUE}
+# Importing the data
+data <- read.csv("Global Music Data.csv", header = TRUE, sep = ",")
+```
+
+```{r, echo=FALSE, warning=TRUE, message=FALSE}
+
+# Find total number of observations  
+# nrow(data)
+
+#get the variable name and its description
+values_table1 <- rbind(c("track_id","track_name","track_artist","track_popularity","track_album_id","track_album_name","track_album_release_date","playlist_name","playlist_id","playlist_genre","playlist_subgenre","danceability","energy","key","loudness","mode","speechiness","acousticness","instrumentalness","liveness","valence","tempo","duration_ms"), c("Unique ID for track", 
+     "Name of the track", 
+     "The artsist for specific for every track ", 
+     "Song Popularity (0-100) where higher is better", 
+    "Album unique ID",
+    "Song album name",
+    "Date when album released",
+    "Name of playlist",
+    "Playlist ID",
+    "Playlist genre",
+    "Playlist subgenre",
+    "Describes how suitable a track is for dancing based on a combination of musical elements",
+    "Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity.",
+    "The estimated overall key of the track.",
+    "The overall loudness of a track in decibels (dB).",
+    "modality (major or minor) of a track, Major is represented by 1 and minor is 0.",
+    "Detects the presence of spoken words in a track.",
+    "A confidence measure from 0.0 to 1.0 of whether the track is acoustic.",
+    "Predicts whether a track contains no vocals.",
+    "Detects the presence of an audience in the recording.",
+    "A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track.",
+    "The overall estimated tempo of a track in beats per minute (BPM).",
+    "Duration of song in milliseconds"
+    ))
+fig_table1 <- plot_ly(
+  type = 'table',
+  columnorder = c(1,2),
+  columnwidth = c(12,12),
+  header = list(
+    values = c('<b>VARIABLES</b><br>', '<b>DESCRIPTION</b>'),
+    line = list(color = '#506784'),
+    fill = list(color = '#119DFF'),
+    align = c('left','center'),
+    font = list(color = 'white', size = 12),
+    height = 40
+  ),
+  cells = list(
+    values = values_table1,
+    line = list(color = '#506784'),
+    fill = list(color = c('#25FEFD', 'white')),
+    align = c('left', 'left'),
+    font = list(color = c('#506784'), size = 12),
+    height = 30
+    ))
+fig_table1
+```
+
+
+## **Data Cleaning**
+
+Within a dataset, correcting or eliminating incorrect, corrupted, improperly formatted, duplicate, or incomplete data. There are numerous ways for data to be duplicated or mislabeled when merging multiple data sources.
+
+```{r}
+#Computing summary statistics for the variables
+datatable(
+  summary(data)
+)
+```
+
+```{r}
+#Identifying the data types of each variable
+datatable(
+  str(data)
+)
+```
+```{r}
+#dinfing missing data
+
+#number of missing values in this data frame.
+sum(is.na(data))
+```
+```{r}
+#Count the number of missing values per column
+colSums(is.na(data))
+```
+## *Removing missing values*
+
+In order to work on a clean dataset the data collected was cleaned 
+
+It's straightforward to remove incomplete records from your analysis by passing your data frame or matrix through the na.omit() method. It's a quick approach to get rid of na values in r.
+
+
+```{r}
+#Remove missing data
+#store new cleaned data to data1
+data1 <- na.omit(data) 
+```
+## *Return Column Names of the data*
+```{r}
+#Return the column names without missing values
+names((colSums(is.na(data))>0))
+```
+## *Read first 10 lines*
+```{r}
+# Read first 10 rows of the cleaned data set
+
+datatable(head(data1, 10),options = list(scrollX=TRUE, pageLength=5))
+```
+## *Read last 10 lines of the cleaned data*
+```{r}
+# Read last 10 rows of the cleaned data set
+
+datatable(tail(data1, 10),options = list(scrollX=TRUE, pageLength=5))
+```
+
+## **Proposed Data Visualization and Exploratory Data Analysis**
+Plots can also be embedded, for example:
+
+
+```{r}
+pairs(~danceability+energy+key+loudness,data = data1,
+   main = "Scatterplot Matrix For GlobalMusicData")
+```
+
+1.For Danceability, energy,key, loudness
+
+  From the scatter plots above:
+
+* Most of the music in the dataset ranged from 0.2 to 0.9 range of danceability and the dataset was fairly distributed across the range.
+
+* The energy scale accelerated in an ascending order with very few music registering low energy levels.
+
+* From the loudness scatter plot we could tell that most of the music was highly rated loud with and exception of few.
+
+
+```{r}
+pairs(~acousticness+liveness+tempo+instrumentalness,data = data1,
+   main = "Scatterplot Matrix For GlobalMusicData")
+```
+
+2.Accousticness, Liveness,Tempo,Instrumentalness
+
+  From the scatter plot above:
+
+* Most of the music accoustic densly ranged between 0.0 and 0.4.
+
+* The music livelyness ranged between 0.0 to 0.4 then decreases as the liveliness ranged headed to 0.8
+hence most of the music had an average to below average liveliness.
+
+* Int the music instumentalness scatter plot we noted that the music ranged between two extremes of either it had instrumentalness or little to no instrumentalness as the poulation was densly at 0-8 level and 0.0 level.
+
+
+```{r}
+pairs(~mode+speechiness+duration_ms,data = data1,
+   main = "Scatterplot Matrix For GlobalMusicData")
+```
+
+3.Mode, Speechiness, Duration_ms
+
+  From the scatter plot above:
+
+* Mode more music had few mode in it.
+
+* Most of the music was less speeachy.
+
+* That most of the music ws short and precise.
+
+```{r}
+ggplot(data1, aes(x = playlist_genre,y=track_popularity)) +
+  #set limits
+  scale_y_continuous(labels = scales:: comma) +
+#customize bars 
+ geom_bar(color="black",
+           fill = "pink",
+           width= 0.5,
+           stat='identity') +
+#adding values numbers
+  geom_text(aes(label = track_popularity), 
+            vjust = -0.25) +
+#customize x,y axes and title
+  ggtitle("Graph showing popularity Playlist genre") +
+  xlab("Playlist genre") + 
+  ylab("Popularity of the Track") +
+#change font
+  theme(plot.title = element_text(color="black", size=14,          face="bold", hjust = 0.5 ),
+       axis.title.x = element_text(color="black", size=11, face="bold"),
+       axis.title.y = element_text(color="black", size=11, face="bold"))
+```
+
+## **Histogram view**
+below showed the polurarity of music through genre
+
+```{r}
+##Histogram
+
+
+ggplot(data1, aes(x=playlist_genre)) +geom_bar()
+```
+
+## **Popularity through the playlist subgenre niche:**
+
+```{r}
+##Histogram
+
+
+ggplot(data, aes(x=playlist_subgenre)) +geom_bar() +coord_flip()
+```
+
+## **Box plots**
+
+```{r}
+# Box plots
+
+
+bp <- ggplot(data, aes(x=duration_ms, y=playlist_genre, fill=playlist_genre)) + 
+  geom_boxplot()+
+  labs(title="Plot of Duration against playlist genre",x="Duration in (ms)", y = "Playlist genre")
+bp + theme_classic()
+```
+ 
+## **PLOT 2;**
+*Playlist_subgenere vs duration:*
+ 
+```{r}
+# Box plots
+
+
+bp <- ggplot(data, aes(x=duration_ms, y=playlist_subgenre, fill=playlist_subgenre)) + 
+  geom_boxplot()+
+  labs(title="Plot of Duration against playlist subgenre",x="Duration in (ms)", y = "Playlist subgenre")
+bp + theme_classic()
+```
+
+## **Summary**
+ In summary from the box chart  Rock. edm, rnb, and rap were the most popular genre in todays music industry.
+ the use of cleaned data made it easy to work on graph calculations and also get a consise numerical data for the Global Music dataset.
+ the use of summary computations, graphic visualization such as bar chart, histogram and box chart made it easier to 
+address the problem statements.
+
+
+## **Interesting insights of the analysis**
+
+* From the analysis we noted that eds, rock and rnb subgenres were the most popular genres in today's industry.
+
+* That all the music was categorized in the pop genre.
+
+* Also that there were a total of 15 missing data in the
+uncleaned dataset.
+
+* The dataset comprised of 21 divisions. i.e columns with different atributes.
+
+## **Limitations**
+2. Data Processing
+The items are stored in physical memory in R. In contrast to other languages such as Python, this is not the case. Furthermore, when compared to Python, R uses more memory. R also mandates that all data be stored in a single location, namely memory. As a result, while dealing with Big Data, it is not the best option. However, with data management packages and Hadoop connectivity, this is readily addressed.
+
+3. Safety and Security
+R is insecure in many ways. Most programming languages, such as Python, include this functionality. As a result, R has a number of limitations, including the inability to be incorporated in a web application.
+
+4. Difficult Language
+R is a difficult language to master. The learning curve is quite steep. owing to
